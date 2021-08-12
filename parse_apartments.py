@@ -35,7 +35,7 @@ def create_csv(search_urls, map_info, fname, pscores):
         # write_parsed_to_csv)
         header = ['Option Name', 'Contact', 'Address', 'Size',
                   'Rent', 'Monthly Fees', 'One Time Fees',
-                  'Pet Policy', 'Distance', 'Duration',
+                  'Distance', 'Duration',
                   'Parking', 'Amenities',
                   'Property Info',
                   'Images', 'Description']
