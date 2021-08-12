@@ -40,12 +40,12 @@ def create_csv(search_urls, map_info, fname, pscores):
                   'Property Info',
                   'Images', 'Description']
         # add the score fields if necessary
-        if pscores:
-            for i in range(len(header), 0, -1):
-                header.insert(i, 5)
-            # flag that we're importing with scores
-            header[1] = 'score'
-            header.append('modifier')
+        # if pscores:
+        #     for i in range(len(header), 0, -1):
+        #         header.insert(i, 5)
+        #     # flag that we're importing with scores
+        #     header[1] = 'score'
+        #     header.append('modifier')
         # write the header
         writer.writerow(header)
 
