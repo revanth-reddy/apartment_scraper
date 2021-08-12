@@ -36,10 +36,8 @@ def create_csv(search_urls, map_info, fname, pscores):
         header = ['Option Name', 'Contact', 'Address', 'Size',
                   'Rent', 'Monthly Fees', 'One Time Fees',
                   'Pet Policy', 'Distance', 'Duration',
-                  'Parking', 'Gym', 'Kitchen',
-                  'Amenities', 'Features', 'Living Space',
-                  'Lease Info', 'Services',
-                  'Property Info', 'Indoor Info', 'Outdoor Info',
+                  'Parking', 'Amenities',
+                  'Property Info',
                   'Images', 'Description']
         # add the score fields if necessary
         if pscores:
@@ -102,17 +100,15 @@ def write_parsed_to_csv(page_url, map_info, writer, pscores):
         row = [fields['name'], contact,
                fields['address'], fields['size'],
                rent, fields['monthFees'], fields['onceFees'],
-               fields['petPolicy'], fields['distance'], fields['duration'],
-               fields['parking'], fields['gym'], fields['kitchen'],
-               fields['amenities'], fields['features'], fields['space'],
-               fields['lease'], fields['services'],
-               fields['info'], fields['indoor'], fields['outdoor'],
+               fields['distance'], fields['duration'],
+               fields['parking'], fields['amenities'],
+               fields['info'],
                fields['img'], fields['description']]
         # add the score fields if necessary
-        if pscores:
-            for i in range(len(row), 0, -1):
-                row.insert(i, '5')
-            row.append('0')
+        # if pscores:
+        #     for i in range(len(row), 0, -1):
+        #         row.insert(i, '5')
+        #     row.append('0')
         # write the row
         writer.writerow(row)
 
@@ -164,39 +160,17 @@ def parse_apartment_information(url, map_info):
 
     # get the description section
     get_description(soup, fields)
-
+    
+    # get the amenities description
+    get_amenities(soup, fields)
+    
     # only look in this section (other sections are for example for printing)
     soup = soup.find('section', class_='specGroup js-specGroup')
-
-    # get the pet policy of the property
-    get_pet_policy(soup, fields)
 
     # get parking information
     get_parking_info(soup, fields)
 
-    # get the amenities description
-    get_field_based_on_class(soup, 'amenities', 'featuresIcon', fields)
-
-    # get the 'interior information'
-    get_field_based_on_class(soup, 'indoor', 'interiorIcon', fields)
-
-    # get the 'outdoor information'
-    get_field_based_on_class(soup, 'outdoor', 'parksIcon', fields)
-
-    # get the 'gym information'
-    get_field_based_on_class(soup, 'gym', 'fitnessIcon', fields)
-
-    # get the 'kitchen information'
-    get_field_based_on_class(soup, 'kitchen', 'kitchenIcon', fields)
-
-    # get the 'services information'
-    get_field_based_on_class(soup, 'services', 'servicesIcon', fields)
-
-    # get the 'living space information'
-    get_field_based_on_class(soup, 'space', 'sofaIcon', fields)
-
-    # get the lease length
-    get_field_based_on_class(soup, 'lease', 'leaseIcon', fields)
+    
 
     # get the 'property information'
     get_features_and_info(soup, fields)
@@ -211,7 +185,6 @@ def parse_apartment_information(url, map_info):
     if map_info['use_google_maps']:
         # get the distance and duration to the target address using the Google API
         get_distance_duration(map_info, fields)
-    print(fields,'fields')
     return fields
 
 def prettify_text(data):
@@ -298,19 +271,18 @@ def get_features_and_info(soup, fields):
                 fields['info'] = data
 
 
-def get_field_based_on_class(soup, field, icon, fields):
+def get_amenities(soup, fields):
     """Given a beautifulSoup parsed page, extract the specified field based on the icon"""
 
-    fields[field] = ''
+    fields['amenities'] = ''
 
     if soup is None: return
     
-    obj = soup.find('i', class_=icon)
-    if obj is not None:
-        data = obj.parent.findNext('ul').getText()
-        data = prettify_text(data)
+    obj = soup.find_all('p', class_='amenityLabel')
 
-        fields[field] = data
+    if obj is not None:
+        for amenity in obj:
+            fields['amenities'] += amenity.text+','
 
 
 def get_parking_info(soup, fields):
@@ -327,24 +299,6 @@ def get_parking_info(soup, fields):
 
         # format it nicely: remove trailing spaces
         fields['parking'] = data
-
-
-def get_pet_policy(soup, fields):
-    """Given a beautifulSoup parsed page, extract the pet policy details"""
-    if soup is None:
-        fields['petPolicy'] = ''
-        return
-    
-    # the pet policy
-    data = soup.find('div', class_='petPolicyDetails')
-    if data is None:
-        data = ''
-    else:
-        data = data.getText()
-        data = prettify_text(data)
-
-    # format it nicely: remove the trailing whitespace
-    fields['petPolicy'] = data
 
 
 def get_fees(soup, fields):
@@ -554,7 +508,7 @@ def main():
         google_api_key = conf.get('all', 'mapsAPIKey')
         map_info['maps_url'] += 'units=' + units + '&mode=' + mode + \
             '&transit_routing_preference=' + routing + '&key=' + google_api_key
-    print(urls)
+    
     create_csv(urls, map_info, fname, pscores)
 
 
